@@ -9,7 +9,6 @@ pipeline {
 
     environment {
         APP_NAME = 'employee-management'
-        K8S_NAMESPACE = 'employee-system'
     }
 
     stages {
@@ -53,33 +52,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                withCredentials([
-                    file(
-                        credentialsId: 'eks-kubeconfig',
-                        variable: 'KUBECONFIG'
-                    )
-                ]) {
-                    bat '''
-                        kubectl apply -f k8s/namespace.yaml
-                        kubectl apply -n "%K8S_NAMESPACE%" -f k8s/configmap.yaml
-                        kubectl apply -n "%K8S_NAMESPACE%" -f k8s/secret.yaml
-                        kubectl apply -n "%K8S_NAMESPACE%" -f k8s/mysql-pvc.yaml
-                        kubectl apply -n "%K8S_NAMESPACE%" -f k8s/mysql-deployment.yaml
-                        kubectl apply -n "%K8S_NAMESPACE%" -f k8s/mysql-service.yaml
-                        kubectl apply -n "%K8S_NAMESPACE%" -f k8s/deployment.yaml
-                        kubectl apply -n "%K8S_NAMESPACE%" -f k8s/service.yaml
-                        kubectl apply -n "%K8S_NAMESPACE%" -f k8s/hpa.yaml
-
-                        kubectl set image deployment/employee-app employee-app="%IMAGE_REPO%:%IMAGE_TAG%" -n "%K8S_NAMESPACE%"
-
-                        kubectl rollout status deployment/employee-app -n "%K8S_NAMESPACE%" --timeout=180s
-                    '''
-                }
-            }
-        }
     }
 
     post {
@@ -88,7 +60,7 @@ pipeline {
         }
 
         success {
-            echo 'Deployment completed.'
+            echo 'Build, test and Docker Hub push completed.'
         }
 
         failure {
