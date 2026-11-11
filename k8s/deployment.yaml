@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: employee-app}
+  template:
+    metadata:
+      labels: {app: employee-app}
+    spec:
+      containers:
+      - name: employee-app
+        image: YOUR_DOCKERHUB_USERNAME/employee-management:latest
+        imagePullPolicy: Always
+        ports: [{name: http, containerPort: 8080}]
+        env:
+        - name: DB_URL
+          value: jdbc:mysql://mysql:3306/employee_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+        - name: DB_USERNAME
+          valueFrom: {secretKeyRef: {name: employee-db-secret, key: MYSQL_USER}}
+        - name: DB_PASSWORD
+          valueFrom: {secretKeyRef: {name: employee-db-secret, key: MYSQL_PASSWORD}}
+        - name: SERVER_PORT
+          valueFrom: {configMapKeyRef: {name: employee-config, key: SERVER_PORT}}
+        readinessProbe:
+          httpGet: {path: /actuator/health/readiness, port: 8080}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: {path: /actuator/health/liveness, port: 8080}
+          initialDelaySeconds: 60
+          periodSeconds: 20
+        resources:
+          requests: {cpu: 200m, memory: 256Mi}
+          limits: {cpu: 1000m, memory: 768Mi}

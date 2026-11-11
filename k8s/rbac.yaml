@@ -1,0 +1,27 @@
+# Example read-only Role. Bind only to a real Kubernetes group/user identity.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: employee-system
+  name: employee-support-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods","services","configmaps"]
+  verbs: ["get","list","watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments","replicasets"]
+  verbs: ["get","list","watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: employee-support-reader-binding
+  namespace: employee-system
+subjects:
+- kind: Group
+  name: employee-support
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: employee-support-reader
+  apiGroup: rbac.authorization.k8s.io
