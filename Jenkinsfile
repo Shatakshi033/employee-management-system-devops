@@ -38,18 +38,19 @@ pipeline {
                     ]) {
                         env.IMAGE_REPO = "${env.DOCKERHUB_USER}/${env.APP_NAME}"
 
-                        powershell '''
-                            $env:DOCKERHUB_TOKEN | docker login --username $env:DOCKERHUB_USER --password-stdin
-                            if ($LASTEXITCODE -ne 0) { exit 1 }
+                        bat '''
+                            @echo off
+                            echo %DOCKERHUB_TOKEN%| docker login --username %DOCKERHUB_USER% --password-stdin
+                            if errorlevel 1 exit /b 1
 
-                            docker build -t "$env:IMAGE_REPO`:$env:IMAGE_TAG" -t "$env:IMAGE_REPO`:latest" .
-                            if ($LASTEXITCODE -ne 0) { exit 1 }
+                            docker build -t %IMAGE_REPO%:%IMAGE_TAG% -t %IMAGE_REPO%:latest .
+                            if errorlevel 1 exit /b 1
 
-                            docker push "$env:IMAGE_REPO`:$env:IMAGE_TAG"
-                            if ($LASTEXITCODE -ne 0) { exit 1 }
+                            docker push %IMAGE_REPO%:%IMAGE_TAG%
+                            if errorlevel 1 exit /b 1
 
-                            docker push "$env:IMAGE_REPO`:latest"
-                            if ($LASTEXITCODE -ne 0) { exit 1 }
+                            docker push %IMAGE_REPO%:latest
+                            if errorlevel 1 exit /b 1
 
                             docker logout
                         '''
